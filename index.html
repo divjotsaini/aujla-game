@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Run for Gunnu! 🏃‍♂️💨</title>
+    <title>Run to Bitti! 🏃‍♀️💨</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@800&family=Pacifico&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%); /* Sky Blue */
+            /* Sky Blue Gradient */
+            background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%); 
             font-family: 'Nunito', sans-serif;
-            touch-action: none; /* Prevents zooming on double tap */
+            touch-action: none;
         }
 
         #game-container {
@@ -22,34 +23,57 @@
             overflow: hidden;
         }
 
-        /* The Ground */
+        /* --- THE SKY (Karan Aujla Clouds) --- */
+        #sky-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60%;
+            z-index: 1; /* Behind everything */
+            pointer-events: none;
+        }
+
+        .karan-cloud {
+            position: absolute;
+            opacity: 0.6;
+            border-radius: 50%;
+            animation: float 20s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateX(100vw) rotate(0deg); }
+            100% { transform: translateX(-20vw) rotate(360deg); }
+        }
+
+        /* --- THE GROUND --- */
         #ground {
             position: absolute;
             bottom: 0;
             width: 100%;
-            height: 15vh; /* Ground takes up bottom 15% */
-            background: #4ec04e; /* Grass Green */
+            height: 15vh;
+            background: #4ec04e;
             border-top: 5px solid #2e8b2e;
-            z-index: 1;
+            z-index: 5;
         }
 
-        /* The Player (Karan) */
+        /* --- THE PLAYER (Gunnu) --- */
         #player {
             position: absolute;
-            bottom: 15vh; /* Sits on top of ground */
+            bottom: 15vh;
             left: 50px;
-            width: 60px;
-            height: 60px;
-            background-image: url('karan.jpg'); /* Uses your uploaded image */
+            width: 70px; /* Slightly bigger */
+            height: 70px;
+            background-image: url('gunnu.jpg'); /* HER PHOTO */
             background-size: cover;
             background-position: center;
             border-radius: 50%;
             border: 3px solid white;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            z-index: 2;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            z-index: 10;
         }
 
-        /* The Obstacle (Heartbreak) */
+        /* --- OBSTACLES --- */
         .obstacle {
             position: absolute;
             bottom: 15vh;
@@ -58,22 +82,22 @@
             height: 50px;
             text-align: center;
             line-height: 50px;
-            z-index: 2;
+            z-index: 9;
         }
 
-        /* Score & UI */
+        /* --- SCORE & UI --- */
         #ui-layer {
             position: absolute;
             top: 20px;
             width: 100%;
             text-align: center;
-            z-index: 10;
+            z-index: 20;
         }
 
         h1 {
             font-family: 'Pacifico', cursive;
             color: #ff4d6d;
-            font-size: 2rem;
+            font-size: 2.5rem;
             margin: 0;
             text-shadow: 2px 2px white;
         }
@@ -82,28 +106,51 @@
             font-size: 1.5rem;
             font-weight: 800;
             color: #333;
-            background: rgba(255,255,255,0.7);
-            padding: 5px 20px;
+            background: rgba(255,255,255,0.8);
+            padding: 5px 25px;
             border-radius: 20px;
             display: inline-block;
             margin-top: 10px;
+            border: 2px solid #ff4d6d;
         }
 
-        /* Start / Game Over Screen */
+        /* --- OVERLAYS (Start / Win / Lose) --- */
         #overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 20;
+            z-index: 50;
             color: white;
             text-align: center;
+        }
+
+        /* The Finish Line Prize (Bitti) */
+        #bitti-prize {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 5px solid #ff4d6d;
+            background-image: url('bitti.jpg'); /* YOUR PHOTO */
+            background-size: cover;
+            background-position: center;
+            margin-bottom: 20px;
+            box-shadow: 0 0 30px #ff4d6d;
+            display: none; /* Hidden until win */
+            animation: popIn 0.5s ease-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
 
         button {
@@ -125,42 +172,44 @@
             box-shadow: none;
         }
 
-        .hidden {
-            display: none !important;
-        }
+        .hidden { display: none !important; }
 
         /* Jump Animation */
-        .jump {
-            animation: jump-animation 0.6s ease-out;
-        }
-
+        .jump { animation: jump-animation 0.6s ease-out; }
         @keyframes jump-animation {
             0% { bottom: 15vh; }
-            50% { bottom: 45vh; } /* How high he jumps */
+            50% { bottom: 45vh; }
             100% { bottom: 15vh; }
         }
-
     </style>
 </head>
 <body>
 
     <div id="game-container">
+        <div id="sky-container"></div>
+
         <div id="ui-layer">
-            <h1>Run to Gunnu! ❤️</h1>
-            <div id="score-board">Distance: 0m</div>
+            <h1>Run to Bitti! ❤️</h1>
+            <div id="score-board">Distance: 0m / 750m</div>
         </div>
 
         <div id="ground"></div>
         <div id="player"></div>
 
         <div id="overlay">
-            <h2 id="msg-title" style="font-size: 2.5rem; margin-bottom: 10px;">Ready?</h2>
-            <p id="msg-text" style="font-size: 1.2rem;">Tap or Space to Jump over the 💔</p>
+            <div id="bitti-prize"></div> 
+            
+            <h2 id="msg-title" style="font-size: 2.5rem; margin-bottom: 10px;">Ready Gunnu?</h2>
+            <p id="msg-text" style="font-size: 1.2rem;">Tap or Space to Jump!</p>
             <button id="start-btn" onclick="startGame()">Start Run</button>
         </div>
     </div>
 
     <script>
+        // --- CONFIGURATION ---
+        const WIN_DISTANCE = 750; // Win at 750m
+        // ---------------------
+
         const player = document.getElementById('player');
         const gameContainer = document.getElementById('game-container');
         const overlay = document.getElementById('overlay');
@@ -168,6 +217,8 @@
         const msgTitle = document.getElementById('msg-title');
         const msgText = document.getElementById('msg-text');
         const startBtn = document.getElementById('start-btn');
+        const bittiPrize = document.getElementById('bitti-prize');
+        const skyContainer = document.getElementById('sky-container');
 
         let isJumping = false;
         let isGameOver = false;
@@ -177,92 +228,100 @@
         let gameLoopId;
         let obstacleGeneratorId;
 
-        // JUMP FUNCTION
+        // 1. GENERATE KARAN AUJLA SKY
+        function generateSky() {
+            // Create 8 floating Karans
+            for(let i=0; i<8; i++) {
+                let img = document.createElement('img');
+                img.src = 'karan.jpg'; // KARAN PHOTO
+                img.className = 'karan-cloud';
+                
+                // Random size (small small)
+                let size = Math.random() * 40 + 30; // 30px to 70px
+                img.style.width = size + 'px';
+                
+                // Random position
+                img.style.top = Math.random() * 50 + '%';
+                img.style.left = Math.random() * 100 + 'vw';
+                
+                // Random speed
+                img.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                
+                skyContainer.appendChild(img);
+            }
+        }
+        generateSky();
+
+        // 2. JUMP FUNCTION
         function jump() {
             if (isJumping || isGameOver) return;
             isJumping = true;
             player.classList.add('jump');
-
             setTimeout(() => {
                 player.classList.remove('jump');
                 isJumping = false;
-            }, 600); // Must match animation duration
+            }, 600);
         }
 
-        // LISTEN FOR CONTROLS (Tap or Spacebar)
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') jump();
-        });
-        document.addEventListener('touchstart', (e) => {
-            // e.preventDefault(); // Uncomment if scrolling is an issue
-            jump();
-        });
+        // Controls
+        document.addEventListener('keydown', (e) => { if (e.code === 'Space') jump(); });
+        document.addEventListener('touchstart', (e) => { jump(); });
         document.addEventListener('click', jump);
 
-        // CREATE OBSTACLES (The 💔)
+        // 3. OBSTACLES
         function createObstacle() {
             if (isGameOver) return;
-
             const obstacle = document.createElement('div');
             obstacle.classList.add('obstacle');
-            obstacle.innerText = "💔"; // The enemy
-            obstacle.style.left = '100vw'; // Start off-screen right
+            obstacle.innerText = "💔"; 
+            obstacle.style.left = '100vw'; 
             gameContainer.appendChild(obstacle);
             obstacles.push(obstacle);
 
-            // Randomize when the next obstacle comes (between 1 and 2 seconds)
             let randomTime = Math.random() * 1500 + 1000; 
             obstacleGeneratorId = setTimeout(createObstacle, randomTime);
         }
 
-        // MOVE OBSTACLES & CHECK COLLISIONS
         function moveObstacles() {
             if (isGameOver) return;
 
             obstacles.forEach((obstacle, index) => {
                 let obstaclePos = parseInt(window.getComputedStyle(obstacle).getPropertyValue('left'));
                 
-                // Move Left
                 if (obstaclePos > -50) {
                     obstacle.style.left = (obstaclePos - gameSpeed) + 'px';
                 } else {
-                    // Remove if it goes off screen
                     obstacle.remove();
                     obstacles.splice(index, 1);
                 }
 
-                // COLLISION DETECTION
-                // Get positions
+                // Collision Detection
                 let playerRect = player.getBoundingClientRect();
                 let obstacleRect = obstacle.getBoundingClientRect();
 
-                // Check if they overlap (simple AABB collision)
-                // We give a little buffer (10px) so hitboxes aren't too annoying
                 if (
-                    playerRect.right > obstacleRect.left + 10 &&
-                    playerRect.left < obstacleRect.right - 10 &&
-                    playerRect.bottom > obstacleRect.top + 10
+                    playerRect.right > obstacleRect.left + 15 &&
+                    playerRect.left < obstacleRect.right - 15 &&
+                    playerRect.bottom > obstacleRect.top + 15
                 ) {
                     gameOver();
                 }
             });
         }
 
-        // MAIN GAME LOOP
+        // 4. MAIN GAME LOOP
         function gameLoop() {
             if (isGameOver) return;
 
             moveObstacles();
-            
-            // Increase Score
             score++;
-            scoreBoard.innerText = "Distance: " + score + "m";
+            scoreBoard.innerText = "Distance: " + score + "m / " + WIN_DISTANCE + "m";
 
-            // Increase speed slightly as you go
-            if (score % 500 === 0) gameSpeed++;
+            // Increase speed slightly
+            if (score % 200 === 0) gameSpeed++;
 
-            // WIN CONDITION (Reached 1000m)
-            if (score >= 1000) {
+            // WIN CONDITION
+            if (score >= WIN_DISTANCE) {
                 gameWin();
                 return;
             }
@@ -274,14 +333,10 @@
             isGameOver = false;
             score = 0;
             gameSpeed = 5;
-            scoreBoard.innerText = "Distance: 0m";
+            bittiPrize.style.display = 'none'; // Hide Bitti
             overlay.classList.add('hidden');
-            
-            // Clear old obstacles
             obstacles.forEach(obs => obs.remove());
             obstacles = [];
-
-            // Start Loops
             gameLoop();
             createObstacle();
         }
@@ -290,7 +345,6 @@
             isGameOver = true;
             clearTimeout(obstacleGeneratorId);
             cancelAnimationFrame(gameLoopId);
-            
             msgTitle.innerText = "Oh no! 💔";
             msgText.innerText = "Don't let the heartbreak stop you!";
             startBtn.innerText = "Try Again";
@@ -302,37 +356,15 @@
             clearTimeout(obstacleGeneratorId);
             cancelAnimationFrame(gameLoopId);
             
-            msgTitle.innerText = "YOU MADE IT! 🎉";
-            msgText.innerText = "You reached Gunnu's heart! ❤️";
-            startBtn.innerText = "Yay!";
-            startBtn.onclick = () => location.reload(); // Refresh to play again
-            overlay.classList.remove('hidden');
+            // SHOW BITTI
+            bittiPrize.style.display = 'block'; 
             
-            // Confetti effect (simple emoji rain)
-            startConfetti();
+            msgTitle.innerText = "YOU REACHED BITTI! ❤️";
+            msgText.innerText = "Happy Valentine's Day Gunnu!";
+            startBtn.innerText = "Run Again";
+            startBtn.onclick = () => location.reload();
+            overlay.classList.remove('hidden');
         }
-
-        function startConfetti() {
-            setInterval(() => {
-                const heart = document.createElement('div');
-                heart.innerText = "❤️";
-                heart.style.position = 'fixed';
-                heart.style.left = Math.random() * 100 + 'vw';
-                heart.style.top = '-50px';
-                heart.style.fontSize = '30px';
-                heart.style.animation = 'drop 3s linear';
-                document.body.appendChild(heart);
-                
-                // Add keyframes for drop if not exists
-                if(!document.getElementById('confetti-style')) {
-                    const style = document.createElement('style');
-                    style.id = 'confetti-style';
-                    style.innerHTML = `@keyframes drop { to { top: 110vh; } }`;
-                    document.head.appendChild(style);
-                }
-            }, 200);
-        }
-
     </script>
 </body>
 </html>
