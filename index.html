@@ -10,7 +10,6 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            /* Sky Blue Gradient */
             background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%); 
             font-family: 'Nunito', sans-serif;
             touch-action: none;
@@ -30,15 +29,15 @@
             left: 0;
             width: 100%;
             height: 60%;
-            z-index: 1; /* Behind everything */
+            z-index: 1; 
             pointer-events: none;
         }
 
         .karan-cloud {
             position: absolute;
-            opacity: 0.6;
+            opacity: 0.5;
             border-radius: 50%;
-            animation: float 20s linear infinite;
+            animation: float 25s linear infinite;
         }
 
         @keyframes float {
@@ -62,8 +61,8 @@
             position: absolute;
             bottom: 15vh;
             left: 50px;
-            width: 70px; /* Slightly bigger */
-            height: 70px;
+            width: 80px;
+            height: 80px;
             background-image: url('gunnu.jpg'); /* HER PHOTO */
             background-size: cover;
             background-position: center;
@@ -73,7 +72,7 @@
             z-index: 10;
         }
 
-        /* --- OBSTACLES --- */
+        /* --- OBSTACLES (Broken Hearts) --- */
         .obstacle {
             position: absolute;
             bottom: 15vh;
@@ -82,6 +81,21 @@
             height: 50px;
             text-align: center;
             line-height: 50px;
+            z-index: 9;
+        }
+
+        /* --- THE FINISH LINE (Bitti) --- */
+        .bitti-finish {
+            position: absolute;
+            bottom: 15vh;
+            width: 120px;
+            height: 120px;
+            background-image: url('bitti.jpg'); /* YOUR PHOTO */
+            background-size: cover;
+            background-position: center;
+            border-radius: 50%;
+            border: 5px solid #ff4d6d; /* Red border */
+            box-shadow: 0 0 20px #ff4d6d;
             z-index: 9;
         }
 
@@ -114,7 +128,7 @@
             border: 2px solid #ff4d6d;
         }
 
-        /* --- OVERLAYS (Start / Win / Lose) --- */
+        /* --- OVERLAYS --- */
         #overlay {
             position: absolute;
             top: 0;
@@ -130,27 +144,6 @@
             z-index: 50;
             color: white;
             text-align: center;
-        }
-
-        /* The Finish Line Prize (Bitti) */
-        #bitti-prize {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            border: 5px solid #ff4d6d;
-            background-image: url('bitti.jpg'); /* YOUR PHOTO */
-            background-size: cover;
-            background-position: center;
-            margin-bottom: 20px;
-            box-shadow: 0 0 30px #ff4d6d;
-            display: none; /* Hidden until win */
-            animation: popIn 0.5s ease-out;
-        }
-
-        @keyframes popIn {
-            0% { transform: scale(0); }
-            80% { transform: scale(1.1); }
-            100% { transform: scale(1); }
         }
 
         button {
@@ -190,15 +183,13 @@
 
         <div id="ui-layer">
             <h1>Run to Bitti! ❤️</h1>
-            <div id="score-board">Distance: 0m / 750m</div>
+            <div id="score-board">Distance: 0m / 1000m</div>
         </div>
 
         <div id="ground"></div>
         <div id="player"></div>
 
         <div id="overlay">
-            <div id="bitti-prize"></div> 
-            
             <h2 id="msg-title" style="font-size: 2.5rem; margin-bottom: 10px;">Ready Gunnu?</h2>
             <p id="msg-text" style="font-size: 1.2rem;">Tap or Space to Jump!</p>
             <button id="start-btn" onclick="startGame()">Start Run</button>
@@ -206,8 +197,8 @@
     </div>
 
     <script>
-        // --- CONFIGURATION ---
-        const WIN_DISTANCE = 750; // Win at 750m
+        // --- GAME SETTINGS ---
+        const WIN_DISTANCE = 1000; 
         // ---------------------
 
         const player = document.getElementById('player');
@@ -217,42 +208,34 @@
         const msgTitle = document.getElementById('msg-title');
         const msgText = document.getElementById('msg-text');
         const startBtn = document.getElementById('start-btn');
-        const bittiPrize = document.getElementById('bitti-prize');
         const skyContainer = document.getElementById('sky-container');
 
         let isJumping = false;
         let isGameOver = false;
         let score = 0;
         let gameSpeed = 5;
-        let obstacles = [];
+        let obstacles = []; // This will hold hearts AND Bitti
         let gameLoopId;
         let obstacleGeneratorId;
+        let bittiSpawned = false;
 
-        // 1. GENERATE KARAN AUJLA SKY
+        // 1. GENERATE SKY
         function generateSky() {
-            // Create 8 floating Karans
             for(let i=0; i<8; i++) {
                 let img = document.createElement('img');
-                img.src = 'karan.jpg'; // KARAN PHOTO
+                img.src = 'karan.jpg'; 
                 img.className = 'karan-cloud';
-                
-                // Random size (small small)
-                let size = Math.random() * 40 + 30; // 30px to 70px
+                let size = Math.random() * 40 + 30; 
                 img.style.width = size + 'px';
-                
-                // Random position
                 img.style.top = Math.random() * 50 + '%';
                 img.style.left = Math.random() * 100 + 'vw';
-                
-                // Random speed
                 img.style.animationDuration = (Math.random() * 10 + 10) + 's';
-                
                 skyContainer.appendChild(img);
             }
         }
         generateSky();
 
-        // 2. JUMP FUNCTION
+        // 2. JUMP
         function jump() {
             if (isJumping || isGameOver) return;
             isJumping = true;
@@ -263,18 +246,29 @@
             }, 600);
         }
 
-        // Controls
         document.addEventListener('keydown', (e) => { if (e.code === 'Space') jump(); });
         document.addEventListener('touchstart', (e) => { jump(); });
         document.addEventListener('click', jump);
 
-        // 3. OBSTACLES
+        // 3. SPAWN LOGIC
         function createObstacle() {
             if (isGameOver) return;
+
+            // IF WE REACHED 1000m, SPAWN BITTI INSTEAD OF HEART
+            if (score >= WIN_DISTANCE && !bittiSpawned) {
+                spawnBitti();
+                return; // Stop creating hearts
+            }
+            
+            // If we are past win distance, don't spawn anything else
+            if (bittiSpawned) return;
+
+            // CREATE BROKEN HEART
             const obstacle = document.createElement('div');
             obstacle.classList.add('obstacle');
             obstacle.innerText = "💔"; 
             obstacle.style.left = '100vw'; 
+            obstacle.dataset.type = "heart"; // Tag it
             gameContainer.appendChild(obstacle);
             obstacles.push(obstacle);
 
@@ -282,48 +276,62 @@
             obstacleGeneratorId = setTimeout(createObstacle, randomTime);
         }
 
+        function spawnBitti() {
+            bittiSpawned = true;
+            const bitti = document.createElement('div');
+            bitti.classList.add('bitti-finish');
+            bitti.style.left = '100vw';
+            bitti.dataset.type = "bitti"; // Tag it
+            gameContainer.appendChild(bitti);
+            obstacles.push(bitti);
+        }
+
+        // 4. MOVE & COLLISION
         function moveObstacles() {
             if (isGameOver) return;
 
-            obstacles.forEach((obstacle, index) => {
-                let obstaclePos = parseInt(window.getComputedStyle(obstacle).getPropertyValue('left'));
+            obstacles.forEach((obs, index) => {
+                let obsPos = parseInt(window.getComputedStyle(obs).getPropertyValue('left'));
                 
-                if (obstaclePos > -50) {
-                    obstacle.style.left = (obstaclePos - gameSpeed) + 'px';
+                // Move Left
+                if (obsPos > -150) {
+                    obs.style.left = (obsPos - gameSpeed) + 'px';
                 } else {
-                    obstacle.remove();
+                    obs.remove();
                     obstacles.splice(index, 1);
                 }
 
-                // Collision Detection
+                // COLLISION DETECTION
                 let playerRect = player.getBoundingClientRect();
-                let obstacleRect = obstacle.getBoundingClientRect();
+                let obsRect = obs.getBoundingClientRect();
 
+                // Check overlap
                 if (
-                    playerRect.right > obstacleRect.left + 15 &&
-                    playerRect.left < obstacleRect.right - 15 &&
-                    playerRect.bottom > obstacleRect.top + 15
+                    playerRect.right > obsRect.left + 20 &&
+                    playerRect.left < obsRect.right - 20 &&
+                    playerRect.bottom > obsRect.top + 20
                 ) {
-                    gameOver();
+                    // WHAT DID WE HIT?
+                    if (obs.dataset.type === "heart") {
+                        gameOver();
+                    } else if (obs.dataset.type === "bitti") {
+                        gameWin();
+                    }
                 }
             });
         }
 
-        // 4. MAIN GAME LOOP
+        // 5. GAME LOOP
         function gameLoop() {
             if (isGameOver) return;
 
             moveObstacles();
-            score++;
-            scoreBoard.innerText = "Distance: " + score + "m / " + WIN_DISTANCE + "m";
-
-            // Increase speed slightly
-            if (score % 200 === 0) gameSpeed++;
-
-            // WIN CONDITION
-            if (score >= WIN_DISTANCE) {
-                gameWin();
-                return;
+            
+            // Only increase score until we see Bitti
+            if (!bittiSpawned) {
+                score++;
+                scoreBoard.innerText = "Distance: " + score + "m / " + WIN_DISTANCE + "m";
+                if (score % 200 === 0) gameSpeed++;
             }
 
             gameLoopId = requestAnimationFrame(gameLoop);
@@ -331,12 +339,15 @@
 
         function startGame() {
             isGameOver = false;
+            bittiSpawned = false;
             score = 0;
             gameSpeed = 5;
-            bittiPrize.style.display = 'none'; // Hide Bitti
             overlay.classList.add('hidden');
+            
+            // Clear old stuff
             obstacles.forEach(obs => obs.remove());
             obstacles = [];
+            
             gameLoop();
             createObstacle();
         }
@@ -356,14 +367,28 @@
             clearTimeout(obstacleGeneratorId);
             cancelAnimationFrame(gameLoopId);
             
-            // SHOW BITTI
-            bittiPrize.style.display = 'block'; 
-            
-            msgTitle.innerText = "YOU REACHED BITTI! ❤️";
-            msgText.innerText = "Happy Valentine's Day Gunnu!";
-            startBtn.innerText = "Run Again";
+            msgTitle.innerText = "YAY! ❤️";
+            msgText.innerText = "I love you so much!";
+            startBtn.innerText = "Play Again";
             startBtn.onclick = () => location.reload();
             overlay.classList.remove('hidden');
+            
+            // Emoji Rain
+            setInterval(() => {
+                const heart = document.createElement('div');
+                heart.innerText = "❤️";
+                heart.style.position = 'fixed';
+                heart.style.left = Math.random() * 100 + 'vw';
+                heart.style.top = '-50px';
+                heart.style.fontSize = '30px';
+                heart.style.animation = 'drop 3s linear';
+                document.body.appendChild(heart);
+            }, 200);
+            
+            // Add style for rain
+            const style = document.createElement('style');
+            style.innerHTML = `@keyframes drop { to { top: 110vh; } }`;
+            document.head.appendChild(style);
         }
     </script>
 </body>
